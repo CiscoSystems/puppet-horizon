@@ -14,6 +14,7 @@ class horizon(
 
   package { 'openstack-dashboard':
     ensure => present,
+    tag => "openstack"
   }
 
   file { '/etc/openstack-dashboard/local_settings.py':
