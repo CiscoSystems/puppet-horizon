@@ -18,7 +18,8 @@ class horizon(
   $swift = false,
   $quantum = false,
   $horizon_app_links = false,
-  $horizon_top_links = false
+  $horizon_top_links = false,
+  $www_hostname = 'www.example.com'
 ) {
 
   include horizon::params
@@ -27,20 +28,19 @@ class horizon(
     Class['memcached'] -> Class['horizon']
   }
 
-  package { ["$::horizon::params::package_name","$::horizon::params::http_service"]:
-    ensure => present,
-    tag => "openstack"
-  }
+  include apache
 
   file { '/etc/openstack-dashboard/local_settings.py':
     content => template('horizon/local_settings.py.erb'),
     mode    => '0644',
+    notify  => Service[httpd]
   }
 
-  service { 'httpd':
-    name      => $::horizon::params::http_service,
-    ensure    => 'running',
-    require   => Package["$::horizon::params::http_service"],
-    subscribe => File['/etc/openstack-dashboard/local_settings.py']
+  apache::vhost::proxy { $www_hostname,
+    port            => '80',
+    dest            => 'http://localhost/openstack-dashboard',
+    no_proxy_uris   => ['/openstack-dashboard']
   }
+
+  
 }
