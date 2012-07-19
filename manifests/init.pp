@@ -27,12 +27,13 @@ class horizon(
   }
 
   package { 'openstack-dashboard':
-    ensure => present,
+    ensure => present
   }
 
   file { '/etc/openstack-dashboard/local_settings.py':
     content => template('horizon/local_settings.py.erb'),
     mode    => '0644',
+    require => Package['openstack-dashboard']
   }
 
   service { 'httpd':
