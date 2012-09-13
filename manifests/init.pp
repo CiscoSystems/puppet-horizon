@@ -36,7 +36,7 @@ class horizon(
     notify  => Service[httpd]
   }
 
-  apache::vhost::proxy { $www_hostname,
+  apache::vhost::proxy { $www_hostname:
     port            => '80',
     dest            => 'http://localhost/openstack-dashboard',
     no_proxy_uris   => ['/openstack-dashboard']
