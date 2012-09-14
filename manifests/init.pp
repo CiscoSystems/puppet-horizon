@@ -30,6 +30,11 @@ class horizon(
 
   include apache
 
+  package { "$::horizon::params::package_name":
+    ensure => present,
+    tag => "openstack"
+  }
+
   file { '/etc/openstack-dashboard/local_settings.py':
     content => template('horizon/local_settings.py.erb'),
     mode    => '0644',
