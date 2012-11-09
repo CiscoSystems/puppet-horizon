@@ -41,6 +41,14 @@ class horizon(
     notify  => Service[httpd]
   }
 
+  file { "/etc/apache2/conf.d/openstack-dashboard.conf":
+        source  => 'puppet:///modules/horizon/openstack-dashboard.def',
+        owner   => 'root',
+        group   => 'root',
+        mode    => '755',
+        notify  => Service['httpd'],
+  }
+
   apache::vhost::proxy { $www_hostname:
     port            => '80',
     dest            => 'http://localhost/openstack-dashboard',
