@@ -96,6 +96,11 @@ LOGGING = {
                 'level': 'INFO',
                 'class': 'logging.StreamHandler',
                 },
+            'file': {
+                'level': '<%= log_level %>',
+                'class': 'logging.FileHandler',
+                'filename': '<%= scope.lookupvar("horizon::params::logdir") %>/horizon.log'
+                },
             },
         'loggers': {
             # Logging from django.db.backends is VERY verbose, send to null
@@ -105,7 +110,11 @@ LOGGING = {
                 'propagate': False,
                 },
             'horizon': {
-                'handlers': ['console'],
+                'handlers': ['file'],
+                'propagate': False,
+            },
+            'openstack_dashboard': {
+                'handlers': ['file'],
                 'propagate': False,
             },
             'openstack_dashboard': {
@@ -113,11 +122,15 @@ LOGGING = {
                 'propagate': False,
             },
             'novaclient': {
-                'handlers': ['console'],
+                'handlers': ['file'],
+                'propagate': False,
+            },
+           'glanceclient': {
+                'handlers': ['file'],
                 'propagate': False,
             },
             'keystoneclient': {
-                'handlers': ['console'],
+                'handlers': ['file'],
                 'propagate': False,
             },
             'glanceclient': {
@@ -125,12 +138,13 @@ LOGGING = {
                 'propagate': False,
             },
             'nose.plugins.manager': {
-                'handlers': ['console'],
+                'handlers': ['file'],
                 'propagate': False,
             }
         }
 }
-
+LOGIN_URL='<%=  scope.lookupvar("horizon::params::root_url") %>/auth/login/'
+LOGIN_REDIRECT_URL='<%=  scope.lookupvar("horizon::params::root_url") %>'
 
 # The Ubuntu package includes pre-compressed JS and compiled CSS to allow
 # offline compression by default.  To enable online compression, install
