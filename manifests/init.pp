@@ -37,6 +37,7 @@ class horizon(
   $django_debug          = 'False',
   $api_result_limit      = 1000,
   $log_level             = 'DEBUG',
+  $can_set_mount_point   = 'True',
   $listen_ssl            = false
 ) {
 
@@ -48,7 +49,8 @@ class horizon(
   if($::osfamily == 'Debian') {
     package { 'node-less': }
   }
-  
+  file { $::horizon::params::httpd_config_file:}
+
   Service <| title == 'memcached' |> -> Class['horizon']
 
   package { 'horizon':
@@ -63,7 +65,7 @@ class horizon(
     notify  => Service[$::horizon::params::http_service],
     require => Package[$::horizon::params::package_name],
   }
- 
+
   file { $::horizon::params::logdir:
     ensure => directory,
     mode => '0751',
@@ -82,7 +84,7 @@ class horizon(
        notify => Service["$::horizon::params::http_service"]
      }
    }
- 
+
   file_line { 'httpd_listen_on_bind_address_80':
      path => $::horizon::params::httpd_listen_config_file,
      match => '^Listen (.*):?80$',
