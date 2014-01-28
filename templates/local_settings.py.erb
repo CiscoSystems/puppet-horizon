@@ -63,7 +63,7 @@ HORIZON_CONFIG = {
         'fade_duration': 1500,
         'types': ['alert-success', 'alert-info']
     },
-    'help_url': "http://docs.openstack.org",
+    'help_url': "<%= @help_url %>",
     'exceptions': {'recoverable': exceptions.RECOVERABLE,
                    'not_found': exceptions.NOT_FOUND,
                    'unauthorized': exceptions.UNAUTHORIZED},
@@ -136,8 +136,12 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 #     ('http://cluster2.example.com:5000/v2.0', 'cluster2'),
 # ]
 
+<% if @keystone_url -%>
+OPENSTACK_KEYSTONE_URL = "<%= @keystone_url %>"
+<% else -%>
 OPENSTACK_HOST = "<%= @keystone_host %>"
 OPENSTACK_KEYSTONE_URL = "<%= @keystone_scheme %>://%s:<%= @keystone_port %>/v2.0" % OPENSTACK_HOST
+<% end -%>
 OPENSTACK_KEYSTONE_DEFAULT_ROLE = "<%= @keystone_default_role %>"
 
 # Disable SSL certificate checks (useful for self-signed certificates):
@@ -203,6 +207,9 @@ OPENSTACK_NEUTRON_NETWORK = {
 # in the Keystone service catalog. Use this setting when Horizon is running
 # external to the OpenStack environment. The default is 'publicURL'.
 #OPENSTACK_ENDPOINT_TYPE = "publicURL"
+<% if @openstack_endpoint_type %>
+OPENSTACK_ENDPOINT_TYPE = "<%= @openstack_endpoint_type %>"
+<% end %>
 
 # SECONDARY_ENDPOINT_TYPE specifies the fallback endpoint type to use in the
 # case that OPENSTACK_ENDPOINT_TYPE is not present in the endpoints
@@ -210,6 +217,9 @@ OPENSTACK_NEUTRON_NETWORK = {
 # external to the OpenStack environment. The default is None.  This
 # value should differ from OPENSTACK_ENDPOINT_TYPE if used.
 #SECONDARY_ENDPOINT_TYPE = "publicURL"
+<% if @secondary_endpoint_type %>
+SECONDARY_ENDPOINT_TYPE = "<%= @secondary_endpoint_type %>"
+<% end %>
 
 # The number of objects (Swift containers/objects or images) to display
 # on a single page before providing a paging element (a "more" link)
@@ -516,8 +526,3 @@ SECURITY_GROUP_RULES = {
 LOGIN_URL = '<%= scope.lookupvar("horizon::params::root_url") %>/auth/login/'
 LOGOUT_URL = '<%= scope.lookupvar("horizon::params::root_url") %>/auth/logout/'
 LOGIN_REDIRECT_URL = '<%= scope.lookupvar("horizon::params::root_url") %>'
-
-# The Ubuntu package includes pre-compressed JS and compiled CSS to allow
-# offline compression by default.  To enable online compression, install
-# the node-less package and enable the following option.
-COMPRESS_OFFLINE = True

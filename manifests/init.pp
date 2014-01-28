@@ -33,19 +33,33 @@
 #    the URIDefaults to false. Defaults to false. (no app links)
 #
 #  [*keystone_host*]
-#    (optional) IP address of the Keystone service. Defaults to '127.0.0.1'.
+#    (optional) IP address of the Keystone service. Deprecated in favor of keystone_url.
 #
 #  [*keystone_port*]
-#    (optional) Port of the Keystone service. Defaults to 5000.
+#    (optional) Port of the Keystone service. Deprecated in favor of keystone_url.
 #
 #  [*keystone_scheme*]
-#    (optional) Scheme of the Keystone service. Defaults to 'http'.
+#    (optional) Scheme of the Keystone service. Deprecated in favor of keystone_url.
+#
+#  [*keystone_url*]
+#    (optional) Full url of keystone public endpoint.
+#    Defaults to 'http://127.0.0.1:5000/v2.0'.
+#    Use this parameter in favor of keystone_host, keystone_port and keystone_scheme.
+#    Set to false to use the deprecated interface.
 #
 #  [*keystone_default_role*]
-#    (optional) Default Keystone role for new users. Defaults to 'Member'.
+#    (optional) Default Keystone role for new users. Defaults to '_member_'.
 #
 #  [*django_debug*]
 #    (optional) Enable or disable Django debugging. Defaults to 'False'.
+#
+#  [*openstack_endpoint_type*]
+#    (optional) endpoint type to use for the endpoints in the Keystone
+#    service catalog. Defaults to 'undef'.
+#
+#  [*secondary_endpoint_type*]
+#    (optional) secondary endpoint type to use for the endpoints in the
+#    Keystone service catalog. Defaults to 'undef'.
 #
 #  [*api_result_limit*]
 #    (optional) Maximum number of Swift containers/objects to display
@@ -65,6 +79,10 @@
 #    (optional) Location of template to use for local_settings.py generation.
 #    Defaults to 'horizon/local_settings.py.erb'.
 #
+#  [*help_url*]
+#    (optional) Location where the documentation should point.
+#    Defaults to 'http://docs.openstack.org'.
+
 class horizon(
   $secret_key,
   $fqdn                    = $::fqdn,
@@ -74,11 +92,14 @@ class horizon(
   $cache_server_port       = '11211',
   $swift                   = false,
   $horizon_app_links       = false,
-  $keystone_host           = '127.0.0.1',
-  $keystone_port           = 5000,
-  $keystone_scheme         = 'http',
-  $keystone_default_role   = 'Member',
+  $keystone_host           = undef,
+  $keystone_port           = undef,
+  $keystone_scheme         = undef,
+  $keystone_url            = 'http://127.0.0.1:5000/v2.0',
+  $keystone_default_role   = '_member_',
   $django_debug            = 'False',
+  $openstack_endpoint_type = undef,
+  $secondary_endpoint_type = undef,
   $api_result_limit        = 1000,
   $log_level               = 'DEBUG',
   $can_set_mount_point     = 'True',
@@ -86,6 +107,7 @@ class horizon(
   $horizon_cert            = undef,
   $horizon_key             = undef,
   $horizon_ca              = undef,
+  $help_url                = 'http://docs.openstack.org',
   $local_settings_template = 'horizon/local_settings.py.erb'
 ) {
 
@@ -97,9 +119,11 @@ class horizon(
     warning('swift parameter is deprecated and has no effect.')
   }
 
-  # I am totally confused by this, I do not think it should be installed...
-  if ($::osfamily == 'Debian') {
-    package { 'node-less': }
+  if $keystone_host or $keystone_port or $keystone_scheme {
+    warning('keystone_host, keystone_port and keystone_scheme are deprecated. Use keystone_url instead.')
+    if $keystone_url {
+      warning('keystone_host, keystone_port and keystone_scheme are ignored when keystone_url is set.')
+    }
   }
 
   file { $::horizon::params::httpd_config_file: }

@@ -77,9 +77,8 @@ describe 'horizon' do
           'DEBUG = False',
           "ALLOWED_HOSTS = ['*', ]",
           "SECRET_KEY = 'elj1IWiLoWHgcyYxFVLj7cM5rGOOxWl0'",
-          'OPENSTACK_HOST = "127.0.0.1"',
-          'OPENSTACK_KEYSTONE_URL = "http://%s:5000/v2.0" % OPENSTACK_HOST',
-          'OPENSTACK_KEYSTONE_DEFAULT_ROLE = "Member"',
+          'OPENSTACK_KEYSTONE_URL = "http://127.0.0.1:5000/v2.0"',
+          'OPENSTACK_KEYSTONE_DEFAULT_ROLE = "_member_"',
           "    'can_set_mount_point': True,",
           'API_RESULT_LIMIT = 1000',
           "LOGIN_URL = '/horizon/auth/login/'",
@@ -97,6 +96,7 @@ describe 'horizon' do
           :keystone_port         => 4682,
           :keystone_scheme       => 'https',
           :keystone_default_role => 'SwiftOperator',
+          :keystone_url          => false,
           :django_debug          => true,
           :api_result_limit      => 4682,
           :can_set_mount_point   => false,
@@ -121,6 +121,7 @@ describe 'horizon' do
       before do
         params.merge!({
           :django_debug            => 'True',
+          :help_url                => 'https://docs.openstack.org',
           :local_settings_template => fixtures_path + '/override_local_settings.py.erb'
         })
       end
@@ -128,7 +129,45 @@ describe 'horizon' do
       it 'uses the custom local_settings.py template' do
         verify_contents(subject, '/etc/openstack-dashboard/local_settings.py', [
           '# Custom local_settings.py',
-          'DEBUG = True'
+          'DEBUG = True',
+          "HORIZON_CONFIG = {",
+          "    'dashboards': ('project', 'admin', 'settings',),",
+          "    'default_dashboard': 'project',",
+          "    'user_home': 'openstack_dashboard.views.get_user_home',",
+          "    'ajax_queue_limit': 10,",
+          "    'auto_fade_alerts': {",
+          "        'delay': 3000,",
+          "        'fade_duration': 1500,",
+          "        'types': ['alert-success', 'alert-info']",
+          "    },",
+          "    'help_url': \"https://docs.openstack.org\",",
+          "    'exceptions': {'recoverable': exceptions.RECOVERABLE,",
+          "                   'not_found': exceptions.NOT_FOUND,",
+          "                   'unauthorized': exceptions.UNAUTHORIZED},",
+          "}",
+        ])
+      end
+    end
+
+    describe 'when overriding keystone_url' do
+      before do
+        params.merge!({
+          :keystone_url => 'https://identity.example.com/public/endpoint/v2.0'
+        })
+      end
+
+      it 'generates local_settings.py' do
+        verify_contents(subject, '/etc/openstack-dashboard/local_settings.py', [
+          'DEBUG = False',
+          "ALLOWED_HOSTS = ['*', ]",
+          "SECRET_KEY = 'elj1IWiLoWHgcyYxFVLj7cM5rGOOxWl0'",
+          'OPENSTACK_KEYSTONE_URL = "https://identity.example.com/public/endpoint/v2.0"',
+          'OPENSTACK_KEYSTONE_DEFAULT_ROLE = "_member_"',
+          "    'can_set_mount_point': True,",
+          'API_RESULT_LIMIT = 1000',
+          "LOGIN_URL = '/horizon/auth/login/'",
+          "LOGOUT_URL = '/horizon/auth/logout/'",
+          "LOGIN_REDIRECT_URL = '/horizon'"
         ])
       end
     end
@@ -149,6 +188,34 @@ describe 'horizon' do
       it { should contain_file_line('httpd_sslkey_path').with(
          :line => "SSLCertificateKeyFile /etc/ssl/localcerts/apache.key"
       )}
+    end
+
+    describe 'with openstack_endpoint_type' do
+      before do
+        params.merge!({
+          :openstack_endpoint_type => 'internalURL',
+        })
+      end
+
+      it 'generates local_settings.py' do
+        verify_contents(subject, '/etc/openstack-dashboard/local_settings.py', [
+          'OPENSTACK_ENDPOINT_TYPE = "internalURL"',
+        ])
+      end
+    end
+
+    describe 'with secondary_endpoint_type' do
+      before do
+        params.merge!({
+          :secondary_endpoint_type => 'ANY-VALUE',
+        })
+      end
+
+      it 'generates local_settings.py' do
+        verify_contents(subject, '/etc/openstack-dashboard/local_settings.py', [
+          'SECONDARY_ENDPOINT_TYPE = "ANY-VALUE"',
+        ])
+      end
     end
   end
 end
